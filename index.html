@@ -50,16 +50,20 @@
             ctx.beginPath();
             ctx.arc(fish.x - 10, fish.y - 5, 3, 0, Math.PI * 2); // глаз
             ctx.fill();
+            // Отладка: текст с координатами
+            ctx.fillStyle = "#FFF";
+            ctx.font = "12px Arial";
+            ctx.fillText(`x: ${Math.round(fish.x)}, y: ${Math.round(fish.y)}`, fish.x - 20, fish.y - 20);
         }
 
         function moveFish() {
             fish.angle += 0.05;
             fish.x += fish.baseSpeed;
-            fish.y = canvas.height / 2 + Math.sin(fish.angle) * 50; // Центр + волна
+            fish.y = 200 + Math.sin(fish.angle) * 50; // Волна от центра
 
-            // Границы
-            if (fish.x + fish.width / 2 > canvas.width) fish.x = -fish.width / 2; // Появляется слева
-            if (fish.x - fish.width / 2 < 0) fish.x = canvas.width + fish.width / 2; // Появляется справа
+            // Простые границы
+            if (fish.x > canvas.width + fish.width / 2) fish.x = -fish.width / 2;
+            if (fish.x < -fish.width / 2) fish.x = canvas.width + fish.width / 2;
         }
 
         function setSpeed(level) {
@@ -68,4 +72,51 @@
 
         function updateScore() {
             scoreDisplay.innerText = `Score: ${score}`;
-            if (score > Math.min(...highScores.concat(
+            if (score > Math.min(...highScores.concat(0))) {
+                highScores.push(score);
+                highScores.sort((a, b) => b - a);
+                highScores = highScores.slice(0, 5);
+                localStorage.setItem("fishingScores", JSON.stringify(highScores));
+                updateHighScores();
+            }
+        }
+
+        function updateHighScores() {
+            scoresBody.innerHTML = "";
+            highScores.forEach((s, i) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `<td>${i + 1}</td><td>${s}</td>`;
+                scoresBody.appendChild(row);
+            });
+        }
+
+        canvas.addEventListener("click", (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+
+            if (clickX > fish.x - fish.width / 2 && clickX < fish.x + fish.width / 2 &&
+                clickY > fish.y - fish.height / 2 && clickY < fish.y + fish.height / 2) {
+                score += 10;
+                fish.x = 300; // Центр
+                fish.y = 200;
+                fish.angle = 0;
+                updateScore();
+            }
+        });
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Очистка
+            moveFish(); // Сначала движение
+            drawFish(); // Потом отрисовка
+            requestAnimationFrame(gameLoop);
+        }
+
+        setSpeed(2);
+        updateHighScores();
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // Начальная очистка
+        drawFish(); // Рисуем сразу
+        gameLoop(); // Запускаем цикл
+    </script>
+</body>
+</html>
