@@ -53,11 +53,19 @@
         }
 
         function moveFish() {
-            fish.angle += 0.05; // Угол для волны
-            fish.x += fish.baseSpeed; // Базовая скорость вправо
-            fish.y = 200 + Math.sin(fish.angle) * 50; // Волновое движение вверх-вниз
+            fish.angle += 0.05;
+            fish.x += fish.baseSpeed;
+            fish.y = canvas.height / 2 + Math.sin(fish.angle) * 50; // Центр + волна
 
-            if (fish.x + fish.width / 2 > canvas.width) fish.x = -fish.width / 2;
-            if (fish.x - fish.width / 2 < 0) fish.x = canvas.width + fish.width / 2;
-            if (fish.y + fish.height / 2 > canvas.height) fish.y = canvas.height - fish.height / 2;
-            if (fish.y - fish.height / 2 < 0)
+            // Границы
+            if (fish.x + fish.width / 2 > canvas.width) fish.x = -fish.width / 2; // Появляется слева
+            if (fish.x - fish.width / 2 < 0) fish.x = canvas.width + fish.width / 2; // Появляется справа
+        }
+
+        function setSpeed(level) {
+            fish.baseSpeed = level;
+        }
+
+        function updateScore() {
+            scoreDisplay.innerText = `Score: ${score}`;
+            if (score > Math.min(...highScores.concat(
