@@ -2,40 +2,101 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Crypto Calculator</title>
+    <title>Fishing Game</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin: 50px; }
-        input, select, button { padding: 10px; margin: 5px; }
-        #result { margin-top: 20px; font-size: 20px; }
+        body { margin: 0; display: flex; flex-direction: column; align-items: center; font-family: Arial, sans-serif; }
+        #gameCanvas { border: 1px solid #000; background: #87CEEB; }
+        #score { font-size: 24px; margin: 10px; }
+        #highScores { margin: 20px; }
+        table { border-collapse: collapse; }
+        th, td { padding: 8px; border: 1px solid #ccc; }
     </style>
 </head>
 <body>
-    <h1>Crypto Calculator</h1>
-    <input type="number" id="usd" placeholder="Enter USD" min="0">
-    <select id="crypto">
-        <option value="bitcoin">Bitcoin (BTC)</option>
-        <option value="ethereum">Ethereum (ETH)</option>
-    </select>
-    <button onclick="calculate()">Calculate</button>
-    <div id="result"></div>
+    <div id="score">Score: 0</div>
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+    <div id="highScores">
+        <h2>High Scores</h2>
+        <table id="scoresTable">
+            <thead><tr><th>Rank</th><th>Score</th></tr></thead>
+            <tbody id="scoresBody"></tbody>
+        </table>
+    </div>
 
     <script>
-        async function calculate() {
-            const usd = parseFloat(document.getElementById("usd").value);
-            const crypto = document.getElementById("crypto").value;
-            if (isNaN(usd) || usd <= 0) {
-                document.getElementById("result").innerText = "Enter a valid amount!";
-                return;
-            }
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreDisplay = document.getElementById("score");
+        const scoresBody = document.getElementById("scoresBody");
 
-            // Получаем курс с CoinGecko
-            const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${crypto}&vs_currencies=usd`);
-            const data = await response.json();
-            const rate = 1 / data[crypto].usd;  // Переводим USD в крипту
-            const result = usd * rate;
+        let score = 0;
+        let fish = { x: 300, y: 200, width: 50, height: 30, speedX: 2, speedY: 1 };
+        let highScores = JSON.parse(localStorage.getItem("fishingScores")) || [];
 
-            document.getElementById("result").innerText = `${usd} USD = ${result.toFixed(8)} ${crypto.toUpperCase()}`;
+        function drawFish() {
+            ctx.fillStyle = "#FF4500";
+            ctx.beginPath();
+            ctx.ellipse(fish.x, fish.y, fish.width / 2, fish.height / 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#000";
+            ctx.beginPath();
+            ctx.arc(fish.x - 10, fish.y - 5, 3, 0, Math.PI * 2); // глаз
+            ctx.fill();
         }
+
+        function moveFish() {
+            fish.x += fish.speedX;
+            fish.y += fish.speedY;
+
+            if (fish.x + fish.width / 2 > canvas.width || fish.x - fish.width / 2 < 0) fish.speedX = -fish.speedX;
+            if (fish.y + fish.height / 2 > canvas.height || fish.y - fish.height / 2 < 0) fish.speedY = -fish.speedY;
+        }
+
+        function updateScore() {
+            scoreDisplay.innerText = `Score: ${score}`;
+            if (score > Math.min(...highScores.concat(0))) {
+                highScores.push(score);
+                highScores.sort((a, b) => b - a);
+                highScores = highScores.slice(0, 5);
+                localStorage.setItem("fishingScores", JSON.stringify(highScores));
+                updateHighScores();
+            }
+        }
+
+        function updateHighScores() {
+            scoresBody.innerHTML = "";
+            highScores.forEach((s, i) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `<td>${i + 1}</td><td>${s}</td>`;
+                scoresBody.appendChild(row);
+            });
+        }
+
+        canvas.addEventListener("click", (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+
+            if (clickX > fish.x - fish.width / 2 && clickX < fish.x + fish.width / 2 &&
+                clickY > fish.y - fish.height / 2 && clickY < fish.y + fish.height / 2) {
+                score += 10;
+                fish.x = Math.random() * (canvas.width - fish.width) + fish.width / 2;
+                fish.y = Math.random() * (canvas.height - fish.height) + fish.height / 2;
+                fish.speedX = (Math.random() - 0.5) * 4;
+                fish.speedY = (Math.random() - 0.5) * 4;
+                updateScore();
+            }
+        });
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            moveFish();
+            drawFish();
+            requestAnimationFrame(gameLoop);
+        }
+
+        updateHighScores();
+        gameLoop();
     </script>
 </body>
 </html>
