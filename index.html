@@ -13,27 +13,28 @@
     <h1>Crypto Calculator</h1>
     <input type="number" id="usd" placeholder="Enter USD" min="0">
     <select id="crypto">
-        <option value="BTC">Bitcoin (BTC)</option>
-        <option value="ETH">Ethereum (ETH)</option>
+        <option value="bitcoin">Bitcoin (BTC)</option>
+        <option value="ethereum">Ethereum (ETH)</option>
     </select>
     <button onclick="calculate()">Calculate</button>
     <div id="result"></div>
 
     <script>
-        const rates = {
-            BTC: 0.000013,  // ~$75,000/BTC
-            ETH: 0.00031    // ~$3,200/ETH
-        };
-
-        function calculate() {
+        async function calculate() {
             const usd = parseFloat(document.getElementById("usd").value);
             const crypto = document.getElementById("crypto").value;
             if (isNaN(usd) || usd <= 0) {
                 document.getElementById("result").innerText = "Enter a valid amount!";
                 return;
             }
-            const result = usd * rates[crypto];
-            document.getElementById("result").innerText = `${usd} USD = ${result.toFixed(8)} ${crypto}`;
+
+            // Получаем курс с CoinGecko
+            const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${crypto}&vs_currencies=usd`);
+            const data = await response.json();
+            const rate = 1 / data[crypto].usd;  // Переводим USD в крипту
+            const result = usd * rate;
+
+            document.getElementById("result").innerText = `${usd} USD = ${result.toFixed(8)} ${crypto.toUpperCase()}`;
         }
     </script>
 </body>
