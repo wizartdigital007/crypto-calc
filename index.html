@@ -7,13 +7,21 @@
         body { margin: 0; display: flex; flex-direction: column; align-items: center; font-family: Arial, sans-serif; }
         #gameCanvas { border: 1px solid #000; background: #87CEEB; }
         #score { font-size: 24px; margin: 10px; }
+        #speedControls { margin: 10px; }
         #highScores { margin: 20px; }
         table { border-collapse: collapse; }
         th, td { padding: 8px; border: 1px solid #ccc; }
+        button { padding: 5px 10px; margin: 0 5px; }
     </style>
 </head>
 <body>
     <div id="score">Score: 0</div>
+    <div id="speedControls">
+        Speed: 
+        <button onclick="setSpeed(1)">1</button>
+        <button onclick="setSpeed(2)">2</button>
+        <button onclick="setSpeed(3)">3</button>
+    </div>
     <canvas id="gameCanvas" width="600" height="400"></canvas>
     <div id="highScores">
         <h2>High Scores</h2>
@@ -30,7 +38,7 @@
         const scoresBody = document.getElementById("scoresBody");
 
         let score = 0;
-        let fish = { x: 300, y: 200, width: 50, height: 30, speedX: 2, speedY: 1 };
+        let fish = { x: 300, y: 200, width: 50, height: 30, baseSpeed: 2, angle: 0 };
         let highScores = JSON.parse(localStorage.getItem("fishingScores")) || [];
 
         function drawFish() {
@@ -45,58 +53,11 @@
         }
 
         function moveFish() {
-            fish.x += fish.speedX;
-            fish.y += fish.speedY;
+            fish.angle += 0.05; // Угол для волны
+            fish.x += fish.baseSpeed; // Базовая скорость вправо
+            fish.y = 200 + Math.sin(fish.angle) * 50; // Волновое движение вверх-вниз
 
-            if (fish.x + fish.width / 2 > canvas.width || fish.x - fish.width / 2 < 0) fish.speedX = -fish.speedX;
-            if (fish.y + fish.height / 2 > canvas.height || fish.y - fish.height / 2 < 0) fish.speedY = -fish.speedY;
-        }
-
-        function updateScore() {
-            scoreDisplay.innerText = `Score: ${score}`;
-            if (score > Math.min(...highScores.concat(0))) {
-                highScores.push(score);
-                highScores.sort((a, b) => b - a);
-                highScores = highScores.slice(0, 5);
-                localStorage.setItem("fishingScores", JSON.stringify(highScores));
-                updateHighScores();
-            }
-        }
-
-        function updateHighScores() {
-            scoresBody.innerHTML = "";
-            highScores.forEach((s, i) => {
-                const row = document.createElement("tr");
-                row.innerHTML = `<td>${i + 1}</td><td>${s}</td>`;
-                scoresBody.appendChild(row);
-            });
-        }
-
-        canvas.addEventListener("click", (e) => {
-            const rect = canvas.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            const clickY = e.clientY - rect.top;
-
-            if (clickX > fish.x - fish.width / 2 && clickX < fish.x + fish.width / 2 &&
-                clickY > fish.y - fish.height / 2 && clickY < fish.y + fish.height / 2) {
-                score += 10;
-                fish.x = Math.random() * (canvas.width - fish.width) + fish.width / 2;
-                fish.y = Math.random() * (canvas.height - fish.height) + fish.height / 2;
-                fish.speedX = (Math.random() - 0.5) * 4;
-                fish.speedY = (Math.random() - 0.5) * 4;
-                updateScore();
-            }
-        });
-
-        function gameLoop() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            moveFish();
-            drawFish();
-            requestAnimationFrame(gameLoop);
-        }
-
-        updateHighScores();
-        gameLoop();
-    </script>
-</body>
-</html>
+            if (fish.x + fish.width / 2 > canvas.width) fish.x = -fish.width / 2;
+            if (fish.x - fish.width / 2 < 0) fish.x = canvas.width + fish.width / 2;
+            if (fish.y + fish.height / 2 > canvas.height) fish.y = canvas.height - fish.height / 2;
+            if (fish.y - fish.height / 2 < 0)
