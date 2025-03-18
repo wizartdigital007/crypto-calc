@@ -18,11 +18,13 @@
     <div id="newsFeed"></div>
 
     <script>
-        const apiKey = aef5d7ae749041de83f9d2285166f961 // Вставь свой ключ NewsAPI сюда
+        const apiKey = aef5d7ae749041de83f9d2285166f961; // Вставь свой ключ NewsAPI сюда
+        const proxyUrl = "https://cors-anywhere.herokuapp.com/"; // Прокси для обхода CORS
+        const apiUrl = `https://newsapi.org/v2/everything?q=NHL&language=en&sortBy=publishedAt&apiKey=${apiKey}`;
 
         async function fetchNews() {
             try {
-                const response = await fetch(`https://newsapi.org/v2/everything?q=NHL&language=en&sortBy=publishedAt&apiKey=${apiKey}`);
+                const response = await fetch(proxyUrl + apiUrl);
                 if (!response.ok) {
                     throw new Error(`Ошибка API: ${response.status} - ${await response.text()}`);
                 }
