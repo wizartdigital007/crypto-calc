@@ -18,28 +18,26 @@
     <div id="newsFeed"></div>
 
     <script>
-        const apiKey = aef5d7ae749041de83f9d2285166f961; // Вставь свой ключ NewsAPI сюда
-        const proxyUrl = "https://cors-anywhere.herokuapp.com/"; // Прокси для обхода CORS
-        const apiUrl = `https://newsapi.org/v2/everything?q=NHL&language=en&sortBy=publishedAt&apiKey=${apiKey}`;
-
-        async function fetchNews() {
-            try {
-                const response = await fetch(proxyUrl + apiUrl);
-                if (!response.ok) {
-                    throw new Error(`Ошибка API: ${response.status} - ${await response.text()}`);
-                }
-                const data = await response.json();
-                return data.articles.slice(0, 3).map(article => ({
-                    title: article.title,
-                    source: article.source.name,
-                    pubTime: article.publishedAt,
-                    content: article.description || "No description available."
-                }));
-            } catch (error) {
-                console.error("Ошибка загрузки:", error);
-                return [];
+        const newsData = [
+            {
+                title: "McDavid breaks Gretzky's single-season points record",
+                source: "ESPN",
+                pubTime: "2025-03-18T14:00:00Z",
+                content: "Connor McDavid of the Edmonton Oilers has surpassed Wayne Gretzky's record with 150 points in a single NHL season."
+            },
+            {
+                title: "Pittsburgh edges Boston in overtime thriller",
+                source: "NHL.com",
+                pubTime: "2025-03-18T13:30:00Z",
+                content: "Sidney Crosby scored the game-winning goal in overtime, securing a 3-2 victory for the Penguins over the Bruins."
+            },
+            {
+                title: "Toronto signs new defenseman to three-year deal",
+                source: "Sportsnet",
+                pubTime: "2025-03-18T12:45:00Z",
+                content: "The Maple Leafs have signed John Doe to a three-year contract worth $5 million."
             }
-        }
+        ];
 
         function timeAgo(pubTime) {
             const now = new Date();
@@ -58,16 +56,15 @@
             content.classList.toggle("active");
         }
 
-        async function renderNews() {
-            const newsData = await fetchNews();
+        function renderNews() {
             const feed = document.getElementById("newsFeed");
-            feed.innerHTML = newsData.length ? newsData.map((news, i) => `
+            feed.innerHTML = newsData.map((news, i) => `
                 <div class="news-item" onclick="toggleContent(${i})">
                     <div class="title">${news.title}</div>
                     <div class="meta">${news.source} | ${timeAgo(news.pubTime)} | ${formatPubTime(news.pubTime)}</div>
                     <div class="content" id="content-${i}">${news.content}</div>
                 </div>
-            `).join("") : "Не удалось загрузить новости. Проверь ключ API или подключение.";
+            `).join("");
         }
 
         renderNews();
