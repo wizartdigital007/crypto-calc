@@ -18,11 +18,14 @@
     <div id="newsFeed"></div>
 
     <script>
-        const apiKey = "aef5d7ae749041de83f9d2285166f961"; // Вставь свой ключ от NewsAPI здесь
+        const apiKey = "aef5d7ae749041de83f9d2285166f961"; // Вставь свой ключ NewsAPI сюда
 
         async function fetchNews() {
             try {
                 const response = await fetch(`https://newsapi.org/v2/everything?q=NHL&language=en&sortBy=publishedAt&apiKey=${apiKey}`);
+                if (!response.ok) {
+                    throw new Error(`Ошибка API: ${response.status} - ${await response.text()}`);
+                }
                 const data = await response.json();
                 return data.articles.slice(0, 3).map(article => ({
                     title: article.title,
@@ -31,7 +34,7 @@
                     content: article.description || "No description available."
                 }));
             } catch (error) {
-                console.error("Error fetching news:", error);
+                console.error("Ошибка загрузки:", error);
                 return [];
             }
         }
@@ -39,7 +42,7 @@
         function timeAgo(pubTime) {
             const now = new Date();
             const pubDate = new Date(pubTime);
-            const diff = Math.floor((now - pubDate) / 60000); // Minutes
+            const diff = Math.floor((now - pubDate) / 60000);
             return diff < 1 ? "just now" : `${diff} minutes ago`;
         }
 
@@ -62,7 +65,7 @@
                     <div class="meta">${news.source} | ${timeAgo(news.pubTime)} | ${formatPubTime(news.pubTime)}</div>
                     <div class="content" id="content-${i}">${news.content}</div>
                 </div>
-            `).join("") : "Failed to load news.";
+            `).join("") : "Не удалось загрузить новости. Проверь ключ API или подключение.";
         }
 
         renderNews();
